@@ -1,79 +1,48 @@
-**🛡️ Sentinel-AI: Industrial Refinery Monitoring & Diagnostic System**
+# 🛡️ Sentinel-AI: Industrial Refinery Monitoring & Diagnostic System
 
-Sentinel-AI is a high-precision autonomous framework designed to transform raw industrial sensor data into actionable intelligence. By bridging the gap between Real-Time Data Acquisition and Generative AI Diagnostics, it ensures 24/7 overwatch for critical refinery operations.
+---
 
-**🏗️ System Architecture & Workflow Phases**
+## An Autonomous AI-Driven Industrial Oversight & Alerting System
 
-The system is architected into four intelligent operational phases, ensuring data integrity and rapid response:
+The **Sentinel-AI** is a modern, production-ready automation framework designed to monitor refinery health in real-time. It transforms raw sensor telemetry (Temperature, Pressure, Vibration) into intelligent, human-readable diagnostics and instant alerts—ensuring industrial safety and operational continuity without manual supervision.
 
-**🔹 Phase 1: Data Ingestion & Screening**
+---
 
-Automated Pulse: Monitors every 60 seconds via a Schedule Trigger.
+## 📽️ Project Overview & Logic
 
-Dynamic Retrieval: Fetches real-time telemetry (Temp, Vibration, Pressure) via REST APIs.
+The automation is implemented using **n8n** with a modular, scalable architecture. Each stage of the workflow is clearly separated to improve readability, debugging, and future extensibility. The system bridges the gap between raw data ingestion and high-level AI analysis.
 
-Data Normalization: Custom JavaScript Logic processes and sanitizes JSON payloads for downstream analysis.
+### 🖼️ Workflow Architecture
+![Workflow Screenshot](https://raw.githubusercontent.com/AnsaAmeen/Sentinel-AI-Industrial-Refinery-Monitoring-Diagnostic-System/main/workflow-screenshot.png)
+*(Note: Upload your workflow image to GitHub with the name 'workflow-screenshot.png' to make this visible)*
 
-**🔹 Phase 2: Intelligent Routing (Predictive Engine)**
+---
 
-Threshold Logic: An advanced IF Node structure evaluates data against safety compliance standards.
+## 💎 Core Features
 
-Dynamic Pathing: * Emergency: Triggers immediate AI Diagnostic & high-priority alerts.
+* 🤖 **AI-Powered Diagnostics**
+    Uses **Google Gemini AI** to interpret complex sensor correlations and identify potential mechanical failures before they occur.
+* 📡 **Real-Time Telemetry Processing**
+    Automated data retrieval via REST APIs every 60 seconds, ensuring zero-latency monitoring.
+* 🚀 **Multi-Channel Alerting**
+    Instant notification dispatch via **Slack (Engineering)** and **Gmail (Management)** for critical threshold breaches.
+* 📊 **Automated Audit Logging**
+    Seamless integration with **Google Sheets** for long-term data archival and regulatory compliance.
+* 🛡️ **Fail-Safe Integrity**
+    Built-in error handling with a dedicated **Error Trigger** to notify administrators of any system downtime.
 
-Warning: Logs cautionary data for maintenance review.
+---
 
-Normal: Continues routine monitoring with zero-alarm interference.
+## 🛠️ Infrastructure & Tech Stack
 
-**🔹 Phase 3: AI Diagnostics & Multi-Channel Dispatch**
+* **Automation Engine:** n8n (Hosted on AWS EC2)
+* **AI Model:** Google Gemini 1.5 Pro
+* **Environment:** Docker & Ubuntu Linux
+* **Languages:** JavaScript (for data normalization)
+* **Integrations:** Slack API, Gmail SMTP, Google Sheets API
 
-Cognitive Analysis: The LLM Agent (Gemini) interprets correlations between multiple sensor spikes to predict potential mechanical failures.
+---
 
-Instant Alerting: Dispatches professional reports and instant notifications via Slack (Engineering) and Gmail (Management).
+## 👤 Contributor
 
-Visual Reporting: Generates human-readable HTML summaries for rapid decision-making.
-
-**🔹 Phase 4: Archival & System Integrity**
-
-Audit Trail: Every incident is logged into Google Sheets for trend analysis and regulatory compliance.
-
-Fail-Safe Integrity: Integrated a dedicated Error Trigger flow. In case of a node failure, the system automatically alerts the admin, ensuring the monitoring remains active.
-
-**🛠️ Technical Hurdles & Resolutions**
-
-Cloud Infrastructure: Successfully deployed and managed the n8n environment on AWS EC2 using Docker.
-
-Resource Management: Overcame disk storage constraints (No space left on device) through Docker image optimization.
-
-Connectivity: Debugged and resolved complex CORS and Secure Cookie issues to allow secure remote access via Public IP.
-
-Logic Optimization: Designed a 28-node sequence that balances high-speed processing with deep AI analysis.
-
-**💼 Business Use Cases**
-
-Preventive Maintenance: Reducing unplanned downtime in refineries by 30%.
-
-Safety Compliance: Automated logging for environmental and safety audits.
-
-Unmanned Operations: AI-driven monitoring for remote industrial sites.
-
-**🚀 Future Roadmap**
-
-Integration of a real-time visual dashboard using Grafana.
-
-Adding Predictive Maintenance models based on historical Google Sheets data.
-
-Multi-language support for global engineering teams.
-
-**🛠️ Tech Stack**
-
-Automation: n8n
-
-AI Brain: Google Gemini 1.5 Pro
-
-Cloud: AWS EC2 (Ubuntu), Docker
-
-Tools: Slack API, Google Sheets, JavaScript
-
-**👤 Author**
-
-Ansa AI Automation & Industrial IoT Engineer
+* **Ansa Ameen** — *AI Automation & Industrial IoT Engineer*
