@@ -13,8 +13,9 @@ The **Sentinel-AI** is a modern, production-ready automation framework designed 
 The automation is implemented using **n8n** with a modular, scalable architecture. Each stage of the workflow is clearly separated to improve readability, debugging, and future extensibility. The system bridges the gap between raw data ingestion and high-level AI analysis.
 
 ### 🖼️ Workflow Architecture
-![Workflow Screenshot](https://raw.githubusercontent.com/AnsaAmeen/Sentinel-AI-Industrial-Refinery-Monitoring-Diagnostic-System/main/workflow-screenshot.png)
-*(Note: Upload your workflow image to GitHub with the name 'workflow-screenshot.png' to make this visible)*
+https://github.com/AnsaAmeen/-Sentinel-AI-Industrial-Refinery-Monitoring-Diagnostic-System/blob/main/Workflowpng.png
+https://github.com/AnsaAmeen/-Sentinel-AI-Industrial-Refinery-Monitoring-Diagnostic-System/blob/main/Google%20sheet%20record.png
+https://github.com/AnsaAmeen/-Sentinel-AI-Industrial-Refinery-Monitoring-Diagnostic-System/blob/main/Email%20response.png
 
 ---
 
