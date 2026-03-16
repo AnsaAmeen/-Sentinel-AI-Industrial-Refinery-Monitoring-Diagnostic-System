@@ -57,4 +57,5 @@ Cloud: AWS EC2 (Ubuntu), Docker
 Tools: Slack API, Google Sheets, JavaScript
 
 **👤 Author**
+
 Ansa AI Automation & Industrial IoT Engineer
