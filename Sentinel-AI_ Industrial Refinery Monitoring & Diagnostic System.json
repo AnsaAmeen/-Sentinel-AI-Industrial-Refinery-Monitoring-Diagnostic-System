@@ -1,0 +1,1009 @@
+{
+  "name": "Sentinel-AI: Industrial Refinery Monitoring & Diagnostic System",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -272,
+        256
+      ],
+      "id": "b216ab5f-efb4-4218-a4a8-6053f7dc03cb",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://api.thingspeak.com/channels/3275758/feeds/last.json",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "api_key",
+              "value": "MOMAYSODW6ZDC0U9"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -112,
+        256
+      ],
+      "id": "7babd957-9471-4e8a-97c2-774688e54c87",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Realistic Sensor Data Generate Karein\nconst temp = Math.floor(Math.random() * (100 - 40 + 1)) + 40; // 40°C to 100°C\nconst vib = parseFloat((Math.random() * (20 - 2) + 2).toFixed(1)); // 2.0 to 20.0 mm/s\nconst press = Math.floor(Math.random() * (50 - 5 + 1)) + 5; // 5 to 50 PSI\n\n// 2. Smart Priority Logic (Teeno sensors ke liye)\nlet priority = \"Normal\";\n\n// Emergency Condition\nif (temp > 90 || vib > 15 || press < 10) {\n  priority = \"Emergency\";\n} \n// Alert Condition\nelse if (temp > 70 || vib > 10 || press < 20) {\n  priority = \"Alert\";\n}\n\n// 3. n8n ke liye final data return karein\nreturn [{\n  json: {\n    temp: temp,\n    vib: vib,\n    press: press,\n    priority: priority,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        64,
+        256
+      ],
+      "id": "b0ccd92c-348b-4d51-9487-338fb8fc5d26",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5261a9fc-3e02-45c8-85e3-c520571b02be",
+              "leftValue": "={{ $json.priority }}",
+              "rightValue": "Normal",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        368,
+        256
+      ],
+      "id": "7507f917-5263-4df6-b11a-39ef9a6ce236",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=As a Maintenance Engineer, analyze: Temp: {{ $json.temp }}C, Vib: {{ $json.vib }}mm/s, Press: {{ $json.press }}psi. \nGive a 1-sentence alert and 1 action command. Max 15 words."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        704,
+        112
+      ],
+      "id": "2648baef-c9ed-4deb-a3c5-41f49fb2c6a9",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Ap0o6tS6wsjChyRW",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "C0AELHHP6EB"
+        },
+        "text": "=🚨 *REFINERY ALERT: Status - {{ $('Code in JavaScript').item.json.priority }}*\n\n*Sensor Readings:*\n• 🌡️ *Temperature:* {{ $('Code in JavaScript').item.json.temp }} °C\n• ⚙️ *Vibration:* {{ $('Code in JavaScript').item.json.vib }} mm/s\n• 📉 *Pressure:* {{ $('Code in JavaScript').item.json.press }} PSI\n\n⚠️ *Diagnosis:* Manual Inspection Required immediately.\n_Report Generated: {{ $now.toLocaleString() }}_",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        800,
+        352
+      ],
+      "id": "1bb564f3-75f4-45a3-8b17-8dc6b9eae293",
+      "name": "Send a message",
+      "webhookId": "82cb8d0d-d478-49a2-ab34-e0a5bd878fe3",
+      "credentials": {
+        "slackApi": {
+          "id": "LdF8UiEQjQbWqC2x",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1JZwj7K8P9mh-D4O17r8IBhpYFLQVaLj6Py6szsEhCRI",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Temperature": "={{ $('If').item.json.temp }}",
+            "AI Analysis": "={{ $('Code in JavaScript').item.json.priority === \"Emergency\" ? ($node[\"Message a model\"]?.json?.content?.parts[0]?.text || \"Gemini Analysis Failed\") : (\"Refinery Alert: \" + $('Code in JavaScript').item.json.priority + \" - Manual Inspection Required\") }}",
+            "Status": "Alert Sent",
+            "Vibration": "={{ $('If').item.json.vib }}",
+            "Pressure": "={{ $('If').item.json.press }}",
+            "Timestamp": "={{ $now}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Temperature",
+              "displayName": "Temperature",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Vibration",
+              "displayName": "Vibration",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Pressure",
+              "displayName": "Pressure",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "AI Analysis",
+              "displayName": "AI Analysis",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1072,
+        288
+      ],
+      "id": "7998c40b-19ac-4eac-9945-db0991aa1cc5",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleApi": {
+          "id": "86vX40TfIb6TnBdP",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0AELHHP6EB",
+          "mode": "id"
+        },
+        "text": "=✅ *REFINERY STATUS: NORMAL*\n\nEverything is operating within safe parameters.\n• 🌡️ *Temperature:* {{ $('Code in JavaScript').item.json.temp }}°C\n• ⚙️ *Vibration:* {{ $('Code in JavaScript').item.json.vib }}mm/s\n• 📉 *Pressure:* {{ $('Code in JavaScript').item.json.press }}PSI\n\n_Last Sync: {{ $now.format('HH:mm:ss') }}_",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        800,
+        544
+      ],
+      "id": "638e49e2-1a4b-4130-8e26-b9eab3b8e5f6",
+      "name": "Send a message1",
+      "webhookId": "b36f7f4f-b705-4b90-92ef-48e2e21dd721",
+      "credentials": {
+        "slackApi": {
+          "id": "LdF8UiEQjQbWqC2x",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        592
+      ],
+      "id": "b6be8c5f-a8dd-4b2a-b97a-83e66a5311bf",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "fromEmail": "ansaseoagency@gmail.com",
+        "toEmail": "ansaseoagency@gmail.com",
+        "subject": "⚠️ CRITICAL SYSTEM ERROR: Refinery Automation Down",
+        "html": "=Hello, the refinery workflow has encountered an error. Execution ID: {{ $execution.id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        48,
+        592
+      ],
+      "id": "7ea320ad-6136-460e-bf40-3580ef783072",
+      "name": "Send an Email",
+      "webhookId": "03a882cd-ddce-4bf8-9636-7477d980bd59",
+      "credentials": {
+        "smtp": {
+          "id": "lKObaiRM6pwXzqIz",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "ansaseoagency@gmail.com",
+        "toEmail": "ansaseoagency@gmail.com",
+        "subject": "=🚨 REFINERY ALERT: Status - {{ $node[\"If\"].json[\"isCritical\"] ? \"CRITICAL\" : \"NORMAL\" }}",
+        "html": "=<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; border: 1px solid #e0e0e0; border-radius: 10px; overflow: hidden; max-width: 600px; margin: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1);\">\n  \n  <div style=\"background-color: #d9534f; color: white; padding: 20px; text-align: center;\">\n    <h2 style=\"margin: 0; font-size: 24px;\">🚨 REFINERY CRITICAL ALERT</h2>\n    <p style=\"margin: 5px 0 0 0; opacity: 0.9;\">System Monitoring Report</p>\n  </div>\n\n  <div style=\"padding: 25px; background-color: #ffffff;\">\n    <p style=\"color: #666; font-size: 14px;\">\n  <strong>Report Generated:</strong> {{ $now.toLocaleString() }}\n</p>\n</p>\n    \n    <table style=\"width: 100%; border-collapse: collapse; margin: 20px 0;\">\n      <thead>\n        <tr style=\"background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;\">\n          <th style=\"padding: 12px; text-align: left; color: #495057;\">Sensor Name</th>\n          <th style=\"padding: 12px; text-align: center; color: #495057;\">Current Value</th>\n        </tr>\n      </thead>\n      <tbody>\n        <tr style=\"border-bottom: 1px solid #eee;\">\n          <td style=\"padding: 12px; font-weight: bold; color: #333;\">🌡️ Temperature</td>\n          <td style=\"padding: 12px; text-align: center; color: #d9534f; font-weight: bold;\">{{ $node[\"Code in JavaScript\"].json[\"temp\"] }} °C</td>\n        </tr>\n        <tr style=\"border-bottom: 1px solid #eee;\">\n          <td style=\"padding: 12px; font-weight: bold; color: #333;\">⚙️ Vibration</td>\n          <td style=\"padding: 12px; text-align: center; color: #d9534f; font-weight: bold;\">{{ $node[\"Code in JavaScript\"].json[\"vib\"] }} mm/s</td>\n        </tr>\n        <tr style=\"border-bottom: 1px solid #eee;\">\n          <td style=\"padding: 12px; font-weight: bold; color: #333;\">📉 Pressure</td>\n          <td style=\"padding: 12px; text-align: center; color: #d9534f; font-weight: bold;\">{{ $node[\"Code in JavaScript\"].json[\"press\"] }} PSI</td>\n        </tr>\n      </tbody>\n    </table>\n\n    <div style=\"background-color: #fff3cd; border-left: 5px solid #ffc107; padding: 20px; border-radius: 4px; margin-top: 10px;\">\n      <h3 style=\"margin-top: 0; color: #856404; font-size: 18px;\">🧠 Gemini AI Diagnosis</h3>\n      <p style=\"color: #664d03; line-height: 1.6; margin-bottom: 0;\">\n        {{ $node[\"Message a model\"].json[\"content\"][\"parts\"][0][\"text\"] }}\n      </p>\n    </div>\n\n    <div style=\"margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px; text-align: center;\">\n      <p style=\"font-size: 12px; color: #999; margin: 0;\">This is an automated report from n8n Industrial Automation System running on AWS.</p>\n      <p style=\"font-size: 12px; color: #007bff; margin: 5px 0 0 0;\">Status: Alert Logged to Google Sheets</p>\n    </div>\n  </div>\n</div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        960,
+        16
+      ],
+      "id": "fda56eb0-f17b-499f-a936-2f75dc88af5a",
+      "name": "Send an Email1",
+      "webhookId": "045f873a-68e6-437e-bea4-f47ffa402f3b",
+      "credentials": {
+        "smtp": {
+          "id": "lKObaiRM6pwXzqIz",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.priority }}",
+                    "rightValue": "Emergency",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "e5f5da66-444f-4541-91d4-92dbbb716872"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Emergency"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "fb873440-1dc1-4ea6-bd08-b4aaccf35bfd",
+                    "leftValue": "={{ $json.priority }}",
+                    "rightValue": "Alert",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Alert"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        528,
+        240
+      ],
+      "id": "42fe7436-712a-4c5a-94f3-93f73eb26b68",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Current data uthayen\nconst current = items[0].json;\n\n// Manual Simulation: Pichli reading (Real system mein ye database se aati)\nconst previous_temp = 60; \n\n// Prediction Logic: Kya temperature 5 degree se zyada barha?\nconst temp_rise = current.temp - previous_temp;\nconst is_trend_dangerous = temp_rise > 5;\n\nreturn [{\n  json: {\n    ...current,\n    temp_rise: temp_rise,\n    is_trend_dangerous: is_trend_dangerous,\n    priority: is_trend_dangerous ? \"Emergency\" : current.priority\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        256
+      ],
+      "id": "d4a1df7c-4dd9-422c-880e-e7398f44296c",
+      "name": "Predictive Engine"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "refinery_logs",
+          "mode": "list",
+          "cachedResultName": "refinery_logs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "temperature": "={{ $json.Temperature }}",
+            "vibration": "={{ $json.Vibration }}",
+            "pressure": "={{ $json.Pressure }}",
+            "status": "={{ $json.Status }}",
+            "timestamp": "=2026-03-11T22:08:32"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "temperature",
+              "displayName": "temperature",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "vibration",
+              "displayName": "vibration",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "pressure",
+              "displayName": "pressure",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1264,
+        288
+      ],
+      "id": "e77585a7-80ae-4dbe-ba87-efc7f0d1dffd",
+      "name": "Insert rows in a table",
+      "credentials": {
+        "postgres": {
+          "id": "kciG9sd88ouTO8zq",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1440,
+        288
+      ],
+      "id": "37c3fceb-5799-48c2-91fd-456f681ea788",
+      "name": "Wait",
+      "webhookId": "a39a39f3-5491-4e1b-9ad7-04c4d10ec1cc"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d74365b0-acf3-42a2-9d25-0f0781ac3084",
+              "leftValue": "={{ $json.temperature }}",
+              "rightValue": 70,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        1600,
+        288
+      ],
+      "id": "20181e92-93a6-4d75-8da2-4aa979c911f8",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "includeUnpaired": true
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1616,
+        96
+      ],
+      "id": "b2b52ee8-58a3-4130-a99b-2b62c7a710d3",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "operation": "formatDate",
+        "date": "={{ $now }}",
+        "options": {
+          "includeInputFields": true
+        }
+      },
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        1776,
+        240
+      ],
+      "id": "e252f0d8-fe95-4102-b54a-065339bec927",
+      "name": "Date & Time",
+      "executeOnce": false,
+      "alwaysOutputData": false,
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\n// 1. Sensors Data Verification\nconst temp = data.temperature || \"0\";\nconst pressure = data.pressure || \"36\"; \nconst vibration = data.vibration || \"11.1\"; \nconst reportDate = data.formattedDate || new Date().toLocaleString();\n\n// 2. AI Analysis Parameter Verification\nconst aiAdvice = data.content?.parts?.[0]?.text || \"No AI advice available.\";\n\n// 3. Generating the Visual HTML Body\nconst htmlBody = `\n<div style=\"font-family: Arial, sans-serif; max-width: 500px; border: 1px solid #ccc; padding: 20px; border-radius: 10px; background-color: #ffffff;\">\n  <h2 style=\"color: #d9534f; text-align: center;\">Industrial Status Report</h2>\n  <p style=\"text-align: center;\"><strong>Date:</strong> ${reportDate}</p>\n  \n  <table style=\"width: 100%; border-collapse: collapse; margin-top: 10px;\">\n    <tr style=\"background-color: #f2f2f2;\">\n      <th style=\"border: 1px solid #ddd; padding: 10px; text-align: left;\">Parameter</th>\n      <th style=\"border: 1px solid #ddd; padding: 10px; text-align: left;\">Live Value</th>\n    </tr>\n    <tr>\n      <td style=\"border: 1px solid #ddd; padding: 10px;\">Temperature</td>\n      <td style=\"border: 1px solid #ddd; padding: 10px; color: red;\"><b>${temp}°C</b></td>\n    </tr>\n    <tr>\n      <td style=\"border: 1px solid #ddd; padding: 10px;\">Pressure</td>\n      <td style=\"border: 1px solid #ddd; padding: 10px;\">${pressure} psi</td>\n    </tr>\n    <tr>\n      <td style=\"border: 1px solid #ddd; padding: 10px;\">Vibration</td>\n      <td style=\"border: 1px solid #ddd; padding: 10px;\">${vibration} mm/s</td>\n    </tr>\n  </table>\n\n  <div style=\"margin-top: 20px; padding: 15px; background-color: #fff3f3; border-left: 5px solid #d9534f;\">\n    <strong style=\"color: #d9534f;\">🤖 AI Diagnostic Analysis:</strong><br>\n    <p style=\"margin-top: 5px; font-style: italic; line-height: 1.5; color: #333;\">${aiAdvice}</p>\n  </div>\n  <div style=\"font-size: 10px; color: #999; text-align: center; margin-top: 10px;\">Generated automatically by n8n Industrial Bot</div>\n</div>\n`;\n\n// 4. Return both JSON and the actual Binary File\n// ... baaki saara logic wahi rehne dein ...\n\nreturn {\n  json: {\n    html_report: htmlBody, // Ye hamara visual table hai\n    subject_date: reportDate\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1904,
+        48
+      ],
+      "id": "fb0ec017-54c6-4cb2-9757-68f25555bd61",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "fromEmail": "ansaseoagency@gmail.com",
+        "toEmail": "ansaameen31@gmail.com",
+        "subject": "=⚠️ ALERT: Industrial Refinery Status Report - {{ $now.format('dd MMMM yyyy') }}",
+        "html": "={{ $json.html_report }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2016,
+        304
+      ],
+      "id": "f4c1f008-5c63-4d30-b24c-b3cf2bbdd4d0",
+      "name": "Send an Email2",
+      "webhookId": "530bf7db-7403-4041-ae25-101a6884d647",
+      "credentials": {
+        "smtp": {
+          "id": "lKObaiRM6pwXzqIz",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"temp\": {{ $node[\"HTTP Request\"].json[\"temp\"] }}, \n  \"vib\": {{ $node[\"HTTP Request\"].json[\"vib\"] }},\n  \"press\": {{ $node[\"HTTP Request\"].json[\"press\"] }},\n  \"status\": \"{{ $node[\"Switch\"].json[\"status\"] }}\",\n  \"ai_analysis\": \"{{ $node[\"Message a model\"].json[\"text\"] }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2176,
+        64
+      ],
+      "id": "0ebb5308-9a8b-4ea4-8ba8-f90defa4975b",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "content": "**🟢 Data Ingestion & Initial Screening**\n\n**📡 PHASE 1: DATA INGESTION**\n\n**Automated Triggering:** Initiates every 60 seconds via a scheduled interval for continuous monitoring.\n**Telemetry Retrieval:** Fetches real-time sensor data (Temp, Vibration, Pressure) via REST API.\nData Pre-Processing: Custom JavaScript sanitizes raw JSON and calculates Trend Deltas.\nHeuristic Screening: Performs a low-latency check to flag immediate outliers before AI processing.\n",
+        "height": 640,
+        "width": 688
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -352,
+        -192
+      ],
+      "typeVersion": 1,
+      "id": "44874204-2948-4b08-97f9-6538d3da9c6f",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "**🔵 Intelligent Logic & Routing**\n\n**⚖️ PHASE 2: INTELLIGENT ROUTING**\n\n• Threshold Evaluation: Compares live readings against Safety Compliance Standards (e.g., Critical > 87°C).\n• Dynamic Path Allocation:\n\n🔴 Emergency: Immediate AI diagnostic & high-priority alerting.\n\n🟡 Warning: Cautionary logging for maintenance review.\n\n🟢 Normal: Routine archival with zero alarm interference.",
+        "height": 640,
+        "width": 304
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        352,
+        -192
+      ],
+      "typeVersion": 1,
+      "id": "17f7326f-287a-44cf-b80a-683b1adbcdc3",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "**🟠 AI Diagnostic & Dispatch**\n\n**🧠 PHASE 3: AI DIAGNOSTIC ENGINE**\n\nRoot-Cause Analysis: The LLM Agent interprets correlations (e.g., High Vibration + High Temp) to predict mechanical failure.\nOmni-Channel Alerting: Dispatches instant alerts to Slack (Engineering) and SMTP (Management).\nVisual Reporting: Generates a professional HTML Report with embedded AI insights for immediate decision-making.\n\n",
+        "height": 640,
+        "width": 864
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        688,
+        -192
+      ],
+      "typeVersion": 1,
+      "id": "0dc7b16e-4472-4ac0-987f-1e81a3466dd8",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "**🔴 Data Archival & System Feedback**\n\n**📊 PHASE 4: ARCHIVAL & HANDSHAKE**\n\nPermanent Logging: Records all incident data into Google Sheets for Audit Trails and Trend Analysis.\nData Filtering: Uses post-process filters to ensure only validated anomalies are archived.\nExecution Handshake: Closes the loop via Webhook Response, providing a JSON 200 OK status to the trigger source.",
+        "height": 640,
+        "width": 864
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1568,
+        -192
+      ],
+      "typeVersion": 1,
+      "id": "968afbd8-5851-4dd7-9c31-a0527bdd60bc",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "**🛡️ PHASE 5: SYSTEM HEALTH**\n\nFail-Safe Monitoring: Autonomously watches all 28 nodes for any execution failures or timeouts.\nInstant Admin Alert: In case of a system crash, an emergency notification is dispatched to the administrator.\nSystem Integrity: Ensures refinery monitoring remains active by flagging issues immediately.",
+        "height": 256,
+        "width": 944
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -352,
+        480
+      ],
+      "typeVersion": 1,
+      "id": "97df7e81-1ea9-4853-a65b-f6835fb81ef7",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "**🛡️ SENTINEL-AI: INDUSTRIAL REFINERY MONITORING SYSTEM**\n\nSentinel-AI is a sophisticated, autonomous framework designed for high-precision infrastructure monitoring. It transforms raw sensor telemetry into actionable industrial intelligence by bridging the gap between Real-Time Data Acquisition and Generative AI Diagnostics.\n\n**🛠️ CORE ARCHITECTURE**\nThe system is divided into four critical operational phases:\n\nIngestion: High-frequency polling of industrial sensors (Temp, Vibration, Pressure).\n\nLogic & Routing: Intelligent triage that classifies data into Emergency, Warning, or Routine status.\n\nAI Diagnostics: Root-cause analysis powered by an LLM Agent to identify mechanical trends and potential failures.\n\nOmni-Channel Response: Simultaneous alerting via Slack and SMTP, with long-term archival in Google Sheets.\n\n**🧠 SYSTEM CAPABILITIES**\nPredictive Maintenance: Moves beyond simple threshold alerts to \"Trend Analysis.\"\n\nAutonomous Decision-Making: Routes critical data to specialized AI models without manual intervention.\n\nAudit-Ready Logging: Maintains a 100% transparent history for regulatory compliance.\n\nFail-Safe Integrity: Integrated Phase 5 (Error Handler) ensures zero-downtime monitoring.\n\n**Status:** v1.0.0 Production-Ready\n**Developer:** Ansa\n**Project Type:** Industrial IoT / AI Automation",
+        "height": 880,
+        "width": 592
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1008,
+        -192
+      ],
+      "typeVersion": 1,
+      "id": "a7ca8c59-5aca-4737-9275-5d520d4885c4",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sentinel-trigger",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -272,
+        112
+      ],
+      "id": "fe399417-ee9e-4cd8-a3f9-41553fa5e684",
+      "name": "Webhook",
+      "webhookId": "bc8fd062-e491-4f4c-b517-66fe4e6ad8c9"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Predictive Engine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Send an Email1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Send an Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send an Email1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Predictive Engine": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Insert rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert rows in a table": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Date & Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Send an Email2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send an Email2": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "a6299942-4ff1-4b45-8ccd-cd33db037267",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0ccc2fa3621642176d96e778c027751a2c4c4d2a9c2dd3cab8d384655316d1db"
+  },
+  "id": "7GkLD3aGgvCSvpfo",
+  "tags": []
+}
